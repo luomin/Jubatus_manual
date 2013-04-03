@@ -1,0 +1,240 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>1.3. アーキテクチャ概要 &mdash; Jubatus_Manual_for_Developer 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Jubatus_Manual_for_Developer 0.1 documentation" href="../index.html" />
+    <link rel="up" title="1. Jubatus概要" href="01_00_Summary.html" />
+    <link rel="next" title="1.4. 分散学習機構Mixの概念説明" href="01_04_Mix.html" />
+    <link rel="prev" title="1.2. Jubatusの機械学習ラインナップと利用シーン" href="01_02_Machine_Learning.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="01_04_Mix.html" title="1.4. 分散学習機構Mixの概念説明"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="01_02_Machine_Learning.html" title="1.2. Jubatusの機械学習ラインナップと利用シーン"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Jubatus_Manual_for_Developer 0.1 documentation</a> &raquo;</li>
+          <li><a href="01_00_Summary.html" accesskey="U">1. Jubatus概要</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="id1">
+<h1>1.3. アーキテクチャ概要<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
+<p>本項では、Jubatusの構成に関する以下の3点について説明します。</p>
+<blockquote>
+<div><p>・ システム構成</p>
+<p>・ 学習モデルの共有</p>
+<p>・ 計算モデル</p>
+</div></blockquote>
+<div class="section" id="id2">
+<h2>1.3.1. システム構成<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>Jubatusには3種類のノードが存在します。分析を行うサーバノード、サーバノードに学習データを渡し、結果を受け取るクライアントノード、そしてこれらを管理する管理ノードの3種類となります。</p>
+<p>サーバノードはモデル情報を格納し、クライアントノードから受け取ったデータを用いて分析を行います。
+分析の際には他のサーバノードとは強調動作する必要はありません。
+自分が保有しているモデル情報を他のサーバノードと共有するために、定期的にMix操作を呼出、自分のモデル情報を交換します。</p>
+<p>クライアントノードは、実際にデータをサーバノードに与え、処理結果を受け取るノードです。
+クライアントノードは管理ノードに問い合わせを行うことで、サーバノードの一覧を得て、データを与えるべきサーバを決定します。</p>
+<p>管理ノードはサーバノードの管理を行い、サーバノードの死活監視やクライアントノードからの問い合わせを処理します。また管理ノード自体も分散協調動作をし、耐障害性を確保しています。</p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><em>パターン1</em></p>
+<p>Jubatusの最も基本的なシステム構成は、以下の図に示すような単一のJubatusクライアントと単一のJubatusサーバの組み合わせとなります。</p>
+<img alt="../_images/single_single.png" src="../_images/single_single.png" />
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><em>パターン2</em></p>
+<p>Jubatusではサーバノード側の処理をスケールアウトさせるため、以下の図のように複数のサーバノードを使用した分散環境とし、分散処理を行うことができます。
+この際、ZooKeeperを用いて複数サーバノード間のプロセスを強調動作させる必要があります。</p>
+<img alt="../_images/single_multi.png" src="../_images/single_multi.png" />
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><em>パターン3</em></p>
+<p>クライアントノードからKeeperに対してクエリーを投げることで、複数のサーバノードで分散して学習や分析を行うことができます。
+Keeperでは、クライアントノードからのクエリーを適切な（1台または複数台の）サーバノードに中継します。
+クライアントノードは、接続先が単一のサーバノードであるか、Keeperであるかを意識する必要がありません。</p>
+<p>Jubatusでは、データ量が膨大である、データソースが離れているなどの理由でクライアントを分散させることも可能です。
+この場合は、以下の図のように複数のKeeperを実行して、それぞれのクライアントに異なるKeeperを割り当てることになります。</p>
+<img alt="../_images/multi_multi.png" src="../_images/multi_multi.png" />
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><em>システム構成による分析精度・処理性能の違い</em></p>
+<p>システム構成パターン1～3について、分析精度および処理性能の違いを以下にまとめます。</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="19%" />
+<col width="41%" />
+<col width="41%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">システム構成</th>
+<th class="head">分析精度</th>
+<th class="head">処理性能</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>パターン1</td>
+<td>パターン2、3に比べ、精度が高い</td>
+<td>パターン2、3に比べ、性能が低い</td>
+</tr>
+<tr class="row-odd"><td rowspan="2">パターン2</td>
+<td rowspan="2">パターン1に比べ、精度が低い</td>
+<td>パターン1に比べ、性能が高い</td>
+</tr>
+<tr class="row-even"><td>パターン3に比べ、性能が低い</td>
+</tr>
+<tr class="row-odd"><td rowspan="2">パターン3</td>
+<td rowspan="2">パターン1に比べ、精度が低い</td>
+<td>パターン1に比べ、性能が高い</td>
+</tr>
+<tr class="row-even"><td>パターン2に比べ、性能が高い</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><em>推奨するプロセス配置構成について</em></p>
+<p>Jubatusを高い信頼性のもとで提供するためには、分散環境で動作させる必要があります。また高いパフォーマンスを維持するためには、JubatusおよびJubatusに関連するプロセス配置構成に気をつける必要があります。
+以下の図に、推奨するプロセス配置構成を示します。</p>
+<img alt="../_images/process_configuration.png" src="../_images/process_configuration.png" />
+<blockquote>
+<div><dl class="docutils">
+<dt>・ Jubatus Keepers</dt>
+<dd><p class="first">運用の容易さ、アプリケーションの実装の容易さから、クライアントアプリケーションと1:1の構成とし、クライアントアプリケーションと共にスケールする運用を推奨します。</p>
+<p>クライアントアプリケーションからKeeperへ通信できない場合（プロセスがダウンしているなど）に対しては、提供するサービスに応じて信頼性を保証する方法を検討する必要があります。例えば、以下のようなことが考えられます。</p>
+<ol class="last arabic simple">
+<li>Keeper プロセスを監視し、Keeperと通信できない場合は、クライアントアプリケーションへのユーザからのアクセスを遮断する。</li>
+<li>別のKeeperとの通信へ切り替える。</li>
+</ol>
+</dd>
+<dt>・ Jubatus Servers</dt>
+<dd><p class="first">&#8211;name で同じ名前を指定することで、複数のサーバプロセスが協調動作します。Jubatusは、サーバプロセスが1つでも動作している限り、利用可能です。</p>
+<p>上の図では、マシンのN 台に障害が発生した場合でも、すべてのインスタンスが利用可能なよう、N+1台のマシンに分散してプロセスを配置しています。</p>
+<p class="last">Jubatusはすべてのデータをメモリ上で処理するという特徴があります。マシンのリソース(特にメモリ)が不足しないよう、サーバプロセスの配置には注意する必要があります。</p>
+</dd>
+<dt>・ZooKeeper</dt>
+<dd><p class="first">Jubatusを分散環境で動作させる際、ZooKeeperが利用できない状況は致命的です。ZooKeeperを高い信頼性で動作させるために、以下のことを注意します。詳細はZooKeeperのドキュメントを参照して下さい。</p>
+<blockquote class="last">
+<div><ol class="arabic simple">
+<li>奇数台のマシンによるクラスタ構成(アンサンブル)で運用します。</li>
+<li>ZooKeeperのパフォーマンスが低下し、Jubatusの動作が不安定になることを避けるため、ZooKeeper専用のマシンを用意することを推奨します。</li>
+</ol>
+</div></blockquote>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="id3">
+<h2>1.3.2. 学習モデルの共有<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<p>Jubatusはモデル情報を緩やかに共有し、同一時刻において同じモデルが全サーバノードで共有されていることが保証されていない、という割り切りをしています。</p>
+<p>一般にリアルタイム、大規模分散、深い分析の3つの特徴はトレードオフの関係にあり、全てを同時に満足させることは困難です。
+例えばMapReduceなどの基盤はバッチ処理に特化しており、クエリーの結果を瞬時に得ると言ったことは苦手です。またComplexEventProcessingなどにおいては複数のノードの情報を共有することは困難です。</p>
+<p>Jubatusはオンライン機械学習やオンラインアルゴリズムの積極的な活用、および緩やかなモデル情報の共有によりこれらの問題を解決しています。</p>
+</div>
+<div class="section" id="id4">
+<h2>1.3.3. 計算モデル<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<p>Jubatusでは、Update、Analyze、Mixと呼ばれる3つの種類の操作を定義することで、分散環境においてもさまざまなデータ分析を行えることを実現しています。
+これは、MapReduceがMapとReduceの2つの操作を定義することで分散処理を実現することと同様です。</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>・ Update</dt>
+<dd>Updateでは、データと現在のモデルが与えられた時、更新したモデル結果を返す操作です。この操作は各ローカルノード（各サーバノード）内において排他的に行う必要があります。</dd>
+<dt>・ Analyze</dt>
+<dd>Analyzeでは、現在のモデルに基づいて与えられたデータを分析し、分析結果を返す操作です。この操作はモデルを更新せず読み込み処理だけで実現でき、並列可することが可能です。</dd>
+<dt>・ Mix</dt>
+<dd>Mixは2つのモデルが与えられた時、それらを混ぜたモデルを返す操作です。多くの分類の学習問題など、凸最適化問題に帰着する問題においては、Mix操作は単純な平均操作で高速に収束することが知られています。</dd>
+</dl>
+</div></blockquote>
+<p>Update、Analyzeの2つの操作はユーザがクライアントノードから呼び出す操作であるのに対し、Mixはユーザから呼び出すことは無く、分析モデルにしたがってシステム側が裏で自動的に呼び出すようになっています。</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">1.3. アーキテクチャ概要</a><ul>
+<li><a class="reference internal" href="#id2">1.3.1. システム構成</a></li>
+<li><a class="reference internal" href="#id3">1.3.2. 学習モデルの共有</a></li>
+<li><a class="reference internal" href="#id4">1.3.3. 計算モデル</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="01_02_Machine_Learning.html"
+                        title="previous chapter">1.2. Jubatusの機械学習ラインナップと利用シーン</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="01_04_Mix.html"
+                        title="next chapter">1.4. 分散学習機構Mixの概念説明</a></p>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="01_04_Mix.html" title="1.4. 分散学習機構Mixの概念説明"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="01_02_Machine_Learning.html" title="1.2. Jubatusの機械学習ラインナップと利用シーン"
+             >previous</a> |</li>
+        <li><a href="../index.html">Jubatus_Manual_for_Developer 0.1 documentation</a> &raquo;</li>
+          <li><a href="01_00_Summary.html" >1. Jubatus概要</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, NTT Advanced Technology.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

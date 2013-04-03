@@ -1,0 +1,929 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>3.2. 特徴ベクトル（FV）コンバータの利用法 &mdash; Jubatus_Manual_for_Developer 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Jubatus_Manual_for_Developer 0.1 documentation" href="../index.html" />
+    <link rel="up" title="3. アプリケーション開発者向けマニュアル" href="03_00_For_Application_Developer.html" />
+    <link rel="next" title="3.3. サンプルプログラム" href="03_03_Sample_Program.html" />
+    <link rel="prev" title="3.1. Jubatusクライアントライブラリのインストール方法" href="03_01_Install_Jubatus_Client_Libraries.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="03_03_Sample_Program.html" title="3.3. サンプルプログラム"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="03_01_Install_Jubatus_Client_Libraries.html" title="3.1. Jubatusクライアントライブラリのインストール方法"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Jubatus_Manual_for_Developer 0.1 documentation</a> &raquo;</li>
+          <li><a href="03_00_For_Application_Developer.html" accesskey="U">3. アプリケーション開発者向けマニュアル</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="fv">
+<h1>3.2. 特徴ベクトル（FV）コンバータの利用法<a class="headerlink" href="#fv" title="Permalink to this headline">¶</a></h1>
+<p>HTML文章やTwitterつぶやき等は、そのままの形で機械学習に用いることができません。そのため、実際に機械学習をする場合は、それらの非定形データを特徴ベクトルに変換する必要があります。この処理を行うのが、特徴ベクトル（FV）コンバータです。特徴ベクトル化が成功すれば、後は機械学習アルゴリズムが適切に処理します。Jubatusでは、その重要な特徴ベクトル化を、プログラムロジックとしてハードコードせずに、外出しの設定ファイルで定義させるツールを用意しました。ここでは、FVコンバータによるHTML文章等の生の非定形データを特徴ベクトルに変換する処理の流れと、実際の設定方法について解説します。</p>
+<div class="section" id="id1">
+<h2>3.2.1.特徴ベクトル（FV）コンバータ概要<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>HTML文章やTwitterつぶやき等の非定形データの特徴ベクトル化は、以下の流れで行われます。</p>
+<dl class="docutils">
+<dt>①フィルタリング</dt>
+<dd>例えば、元のデータがHTMLで書かれていた場合は、タグ文字列（&lt;a&gt;,&lt;h1&gt;など）は学習時に邪魔になることが多いため、予めフィルタリングによって取り除きます。</dd>
+<dt>②特徴抽出</dt>
+<dd>①でフィルタリングされたデータから特徴を抽出します。例えば、フィルタリングの結果として、「世の中ではビッグデータというキーワードが注目されていますが、一口にビッグデータといっても立場や観点によって定義は様々です」という文字列が与えられたとします。ここからキーワードを抽出すると、「ビッグデータ」、「世の中」、「キーワード」、「定義」といった特徴が得られます。これらの特徴を出現頻度で重み付けをする（出現回数をカウントする）と、「ビッグデータ：2」、「世の中：1」、「キーワード：1」、「定義：1」という結果が得られます。従って、この文字列からは「ビッグデータ」という言葉が2度出ているため（「ビッグデータ」のスコアが高いため）、分析結果としてIT関連の話題だということがわかります。この一連の流れの中で、与えられた文字列から特徴を抽出して、出現頻度等によって重み付けをするまでの処理を特徴抽出といいます。</dd>
+</dl>
+<p>Jubatusでは、①フィルタリングでデータからどのような要素を取り除くか、②特徴抽出でどのように特徴の抽出を行い、どのように重み付けをするかを、JSON形式の設定ファイルで定義することができます。一連の処理は、最もシンプルな設定によって多くの場合はうまく動くことが予想されます。 以下に最もシンプルな設定を記載します。 この設定を利用すると、文字列データは全てスペース文字で分割してそれぞれの単語を特徴量とし、数値データはその値をそれぞれ特徴量として利用しています。 実際にアプリケーションを書くときに、より高い精度の学習結果を求める場合は、設定をチューニングすることで望ましい結果を得られる可能性があります。</p>
+<blockquote>
+<div><div class="highlight-python"><pre>{
+  /**
+   文字列データのフィルタ設定。ここではフィルタリングしていません。
+  **/
+  "string_filter_types": {},
+  "string_filter_rules": [],
+
+  /**
+   数値データのフィルタ設定。ここではフィルタリングしていません。
+  **/
+  "num_filter_types": {},
+  "num_filter_rules": [],
+
+  /**
+   文字列データの特徴抽出器の設定。
+   「"type": "space"」はスペース文字で分割するという設定です。
+   「 "sample_weight": "bin", "global_weight": "bin"」は重み付けの設定です。
+   詳細は後述します。
+  **/
+  "string_types": {},
+  "string_rules": [
+        { "key": "*", "type": "space", "sample_weight": "bin", "global_weight": "bin" }
+  ],
+
+  /**
+   数値データの特徴抽出器の設定。
+   「"type": "num"」は与えられた値を特徴量としてそのまま用いるという設定です。
+   詳細は後述します。
+  **/
+  "num_types": {},
+  "num_rules": [
+    { "key": "*",  "type": "num" }
+  ]
+}</pre>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="jubatus">
+<h2>3.2.2.Jubatusで利用できるデータ形式<a class="headerlink" href="#jubatus" title="Permalink to this headline">¶</a></h2>
+<p>Jubatusで利用できるデータ形式は、datumと呼ばれる非常にシンプルなkey-valueデータ形式です。
+datumには2つのkey-valueが存在します。一つはキーも値も文字列の文字列データ (string_values) です。
+もう一方は、キーは同様に文字列ですが、値は数値の数値データ (num_values) です。
+前者には名前、テキスト、職業など、任意のテキストデータを入れることができます。
+後者には年齢、年収、アクセス回数など、任意の数値データを入れることができます。
+この2つのデータから、機械学習を行う際に必要となる特徴量を抽出するのが、このFVコンバータです。
+また、効率を重視して、それぞれのkey-valueは、各言語（Java、Python、Ruby、C++）のmap型や辞書型を利用せず、keyとvalueのペアの配列で表現します。</p>
+<p>以下に例を示します。</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="p">(</span>
+  <span class="p">[</span>
+    <span class="p">(</span><span class="s">&quot;user/id&quot;</span><span class="p">,</span> <span class="s">&quot;ippy&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;user/name&quot;</span><span class="p">,</span> <span class="s">&quot;Loren Ipsum&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;message&quot;</span><span class="p">,</span> <span class="s">&quot;&lt;H&gt;Hello World&lt;/H&gt;&quot;</span><span class="p">)</span>
+  <span class="p">],</span>
+  <span class="p">[</span>
+    <span class="p">(</span><span class="s">&quot;user/age&quot;</span><span class="p">,</span> <span class="mi">29</span><span class="p">)</span> <span class="p">,</span>
+    <span class="p">(</span><span class="s">&quot;user/income&quot;</span><span class="p">,</span> <span class="mi">100000</span><span class="p">)</span>
+  <span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>これにフィルタリングを施した後の例は以下のようになります。</p>
+<blockquote>
+<div><div class="highlight-python"><pre>(
+  [
+    ("user/id", "ippy"),
+    ("user/name", "Loren Ipsum"),
+    ("message", "&lt;H&gt;Hello World&lt;/H&gt;"),
+    ("message-detagged", "Hello World")   ← "message"からHTMLタグを除外した後の値
+  ],
+  [
+    ("user/age", 29),
+    ("user/age_kazoe", 30) ,              ←"user/age"に1を追加して数え年に変換した値
+    ("user/income", 100000)
+  ]
+)</pre>
+</div>
+</div></blockquote>
+<p>続く特徴抽出では、例えばフィルタリングの結果として得られた&#8221;message-detagged&#8221;をスペース毎に分割して、&#8221;Hello&#8221;と&#8221;World&#8221;を取得し、出現回数で重み付けすることができます。この例では&#8221;Hello&#8221;も&#8221;World&#8221;も一度ずつしか出現しませんが、仮に&#8221;Hello Hello Hello World&#8221;のような文字列であれば、特徴抽出の結果として&#8221;Hello&#8221;と&#8221;World&#8221;が得られ、その重みはそれぞれ3と1という結果になります。また&#8221;user/age_kazoe&#8221;等の数値データの場合、特徴抽出では、数値をそのまま重みとして扱ったり、数値データの対数(log)を重みとして利用できます。フィルタリングと特徴抽出の設定方法と得られる結果の詳細は後述します。</p>
+</div>
+<div class="section" id="id2">
+<h2>3.2.3.データ変換の流れ<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>大まかな処理の流れは以下のようになっています。</p>
+<p>datumは文字列データと数値データの2つがあるため、それぞれが別々の処理フローを流れます。</p>
+<p>文字列データには、まずstring_filter_rulesが適用されて、フィルタ済みデータが追加されます。 その状態で、string_rulesによって文字列データからの特徴量が抽出されます。</p>
+<p>数値データには、まずnum_filter_rulesが適用されて、フィルタ済みデータが追加されます。 その状態で、num_rulesによって数値データからの特徴量が抽出されます。</p>
+<p>フィルタと特徴抽出器には引数を必要とするものもあるため、それらはtypesで事前に準備することによって各規則で利用することができるようになります。</p>
+<blockquote>
+<div><img alt="../_images/convert_flow.png" src="../_images/convert_flow.png" />
+</div></blockquote>
+</div>
+<div class="section" id="id3">
+<h2>3.2.4.フィルタ処理<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<p>Jubatusはフィルタという機能を用いて、datum中のkey-valueペアを変換して、別の要素として追加することができます。 例えば、元のデータがHTMLで書かれていたとします。 この中のタグ文字列（&lt;a&gt; など）は、学習時には邪魔になることが多く、そのため予め フィルタリング して使いたいことがあります。 あるいは、メール本文の引用（&gt;から始まる行）を削除したい時に利用するのが、フィルタ機能です。</p>
+<p>例として、&#8221;message&#8221;内の文字列からHTMLタグを取り除きます。 まず、「HTML タグを取り除く」というルールを定義し、それをkey = &#8220;message&#8221;に適用します。 これは、以下のようなconfigで表現されます。</p>
+<blockquote>
+<div><div class="highlight-python"><pre>"string_filter_types": {
+  "detag": { "method": "regexp", "pattern": "&lt;[^&gt;]*&gt;", "replace": "" }
+},
+"string_filter_rules": [
+  { "key": "message", "type": "detag", "suffix": "-detagged" }
+]</pre>
+</div>
+</div></blockquote>
+<p>まず、&#8221;string_filter_types&#8221;でフィルタを定義し、これを&#8221;detag&#8221;と命名します。&#8221;detag&#8221;フィルタに対して、&#8221;regexp&#8221;という手法で、&#8221;&lt;[^&gt;]*&gt;&#8221;を&#8221;&#8220;に置き換える、というフィルタを定義します。 次に、実際に datum のどの要素にどう適用するのか書いたのが&#8221;string_filter_rules&#8221;です。 ここでは、&#8221;message&#8221;という名前の&#8221;key&#8221;の要素に対して、先で定義した&#8221;detag&#8221;フィルタを適用し、&#8221;message&#8221;に&#8221;-detagged&#8221;を付与したkey、すなわち&#8221;message-detagged&#8221;に結果を格納することを示しています。</p>
+<p>また、&#8221;age&#8221;を数え年に変換(+1歳に)するには、</p>
+<blockquote>
+<div><div class="highlight-python"><pre>"num_filter_types": {
+  "add_1": { "method": "add", "value": "1" }
+},
+"num_filter_rules": [
+  { "key": "user/age", "type": "add_1", "suffix": "_kazoe" }
+]</pre>
+</div>
+</div></blockquote>
+<p>とします。この挙動も先と同じで、&#8221;user/age&#8221;に1加えた結果が&#8221;user/age_kazoe&#8221;に格納されます。</p>
+<p>これらのfilterを通すことにより、次のdatumが得られます:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="p">(</span>
+  <span class="p">[</span>
+    <span class="p">(</span><span class="s">&quot;user/id&quot;</span><span class="p">,</span> <span class="s">&quot;ippy&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;user/name&quot;</span><span class="p">,</span> <span class="s">&quot;Loren Ipsum&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;message&quot;</span><span class="p">,</span> <span class="s">&quot;&lt;H&gt;Hello World&lt;/H&gt;&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;message-detagged&quot;</span><span class="p">,</span> <span class="s">&quot;Hello World&quot;</span><span class="p">)</span>
+  <span class="p">],</span>
+  <span class="p">[</span>
+    <span class="p">(</span><span class="s">&quot;user/age&quot;</span><span class="p">,</span> <span class="mi">29</span><span class="p">),</span>
+    <span class="p">(</span><span class="s">&quot;user/age_kazoe&quot;</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span> <span class="p">,</span>
+    <span class="p">(</span><span class="s">&quot;user/income&quot;</span><span class="p">,</span> <span class="mi">100000</span><span class="p">)</span>
+  <span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>それぞれの要素について、詳細に説明します。</p>
+<p><strong>string_filter_types</strong></p>
+<p>&lt;フィルタ名&gt;: &lt;引数&gt; からなる辞書を指定します。 フィルタ名は文字列、引数は文字列から文字列への辞書です。 引数には必ず&#8221;method&#8221;を指定します。 残りの引数に関しては、&#8221;method&#8221;の内容に応じて必要な引数が異なります。 指定できる&#8221;method&#8221;の値と、それぞれに対応した引数は以下のとおりです。</p>
+<blockquote>
+<div><ul class="simple">
+<li>regexp</li>
+</ul>
+<blockquote>
+<div><p>正規表現にマッチした部分を、指定した文字列に変換します。このフィルタは&#8211;disable-re2付きでコンパイルすると利用できません。</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">pattern:</th><td class="field-body">マッチさせる正規表現を指定します。re2を利用するため、利用できる表現はre2のマニュアルを参照してください。</td>
+</tr>
+<tr class="field-even field"><th class="field-name">replace:</th><td class="field-body">置き換え後の文字列を指定してください</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>HTMLのすべてのタグを消すには、例えば以下のようなstring_filter_typeを宣言してください。</p>
+<div class="highlight-python"><pre>"string_filter_types": {
+ "detag": { "method": "regexp", "pattern": "&lt;[^&gt;]*&gt;", "replace": "" }
+}</pre>
+</div>
+</div></blockquote>
+<ul class="simple">
+<li>dynamic</li>
+</ul>
+<blockquote>
+<div><p>プラグインを利用します。詳細は後述します。</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">path:</th><td class="field-body">プラグインのパスを指定します。</td>
+</tr>
+<tr class="field-even field"><th class="field-name">function:</th><td class="field-body">プラグインの呼び出し関数を指定します。この値はプラグインによって異なります。</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<p><strong>string_filter_rules</strong></p>
+<p>フィルタの適用規則を指定します。 規則は指定された順に評価されます。datumがある規則の条件を満たした場合、そのルールが適用され、変換後の値がdatumに追加されます。 規則は、元のdatumと、それまでにフィルタ規則で追加された値の両方に適用されます。各規則は&#8221;key&#8221;,&#8221;type&#8221;,&#8221;suffix&#8221;の要素からなる辞書を指定します。</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">key:</th><td class="field-body">datumの各要素のどのkeyとマッチさせるかを指定します。詳細は後述します。</td>
+</tr>
+<tr class="field-even field"><th class="field-name">type:</th><td class="field-body">利用するフィルタ名を指定します。これは &#8220;string_filter_types&#8221;の項で作ったフィルタ名を指定します。デフォルトで利用できるフィルタはありません。</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">suffix:</th><td class="field-body">変換後の結果を格納するkeyのサフィックスを指定します。例えばsuffixに&#8221;-detagged&#8221;が指定され、&#8221;name&#8221;という名前のkeyに規則が適用された場合、結果は&#8221;name-detagged&#8221;という名前のkeyに格納されます。</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>&#8220;key&#8221;の要素は以下の内のいずれかのフォーマットで指定します。但し、datumの全要素に対して、すべての規則が適用されるかチェックされます。したがって、複数の規則がマッチした場合は両方の規則が適用されて、複数のフィルタ済みの値が追加されることに注意してください。 なお、&#8221;key&#8221;に関しては以降でも登場しますが、全て同じフォーマットであり、複数適用される可能性がある点も同様です。</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="91%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">値</th>
+<th class="head">意味</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>&#8220;*&#8221; or &#8220;&#8221;</td>
+<td>全ての要素にマッチします。&#8221;key&#8221;にこれが指定されると必ず適用されることになります。</td>
+</tr>
+<tr class="row-odd"><td>&#8220;XXX*&#8221;</td>
+<td>末尾に*をつけると、その前のみをプレフィックスとして使用します。つまり、&#8221;XXX&#8221;で始まるkeyのみにマッチします。</td>
+</tr>
+<tr class="row-even"><td>&#8220;*XXX&#8221;</td>
+<td>先頭に*をつけると、その後のみをサフィックスとして使用します。つまり、&#8221;XXX&#8221;で終わるkeyのみにマッチします。</td>
+</tr>
+<tr class="row-odd"><td>&#8220;/XXX/&#8221;</td>
+<td>2つのスラッシュ(/)で囲うと、その間の表現を正規表現とみなして、正規表現でマッチします。&#8211;disable-re2付きでコンパイルすると利用できません。</td>
+</tr>
+<tr class="row-even"><td>その他</td>
+<td>以上のいずれでもない場合は、与えられた文字列と一致するkeyのみにマッチします。</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p><strong>num_filter_types</strong></p>
+<p>&#8220;string_filter_types&#8221; と同様、&lt;フィルタ名&gt;: &lt;引数&gt; からなる辞書を指定します。利用の仕方はstring_filter_typesとほぼ同じです。 &lt;フィルタ名&gt; は文字列、引数は文字列から文字列への辞書です。 &lt;引数&gt; には必ず&#8221;method&#8221;を指定し、残りの引数は&#8221;method&#8221;の値に応じて必要なものが異なります。 指定できる&#8221;method&#8221;の値と、それぞれに対応した引数は以下のとおりです。</p>
+<blockquote>
+<div><ul class="simple">
+<li>add</li>
+</ul>
+<blockquote>
+<div><p>元の値に指定した値を足します。</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">value:</th><td class="field-body">足す値の文字列表現を指定します。例えば3足すのであれば、&#8221;3&#8221;と指定します。数値型ではなく文字列として指定する点に注意してください。</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</div></blockquote>
+<ul class="simple">
+<li>dynamic</li>
+</ul>
+<blockquote>
+<div><p>プラグインを利用します。詳細は後述します。</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">path:</th><td class="field-body">プラグインのパスを指定します。</td>
+</tr>
+<tr class="field-even field"><th class="field-name">function:</th><td class="field-body">プラグインの呼び出し関数を指定します。</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<p><strong>num_filter_rules</strong></p>
+<p>こちらも、string_filter_rules同様、フィルタの適用規則を指定します。 規則は複数からなり、各規則は&#8221;key&#8221;, &#8220;type&#8221;, &#8220;suffix&#8221;の要素からなる辞書を指定します。</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">key:</th><td class="field-body">datumの各要素のどのkeyとマッチさせるかを指定します。詳細はstring_filter_rulesを参照してください。</td>
+</tr>
+<tr class="field-even field"><th class="field-name">type:</th><td class="field-body">利用するフィルタ名を指定します。これはstring_filter_typesの項で作ったフィルタ名を指定します。デフォルトで利用できるフィルタはありません。</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">suffix:</th><td class="field-body">変換後の結果を格納するkeyのサフィックスを指定します。</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>&#8220;key&#8221;の指定の仕方は、string_filter_rulesを参照してください。</p>
+</div>
+<div class="section" id="id4">
+<h2>3.2.5.特徴抽出処理<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<p>ここでは文字列からの特徴抽出と数値からの特徴抽出の設定について解説します。</p>
+<div class="section" id="id5">
+<h3>3.2.5.1.文字列からの特徴抽出<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<p>文字列型に対する特徴抽出器と、その抽出規則の適用方法について解説します。 以下に、設定の例を示します。 この例では、&#8221;user/name&#8221;の値はそのまま特徴量として使用し、&#8221;message&#8221;は文字2グラムを特徴量とし、&#8221;message-detagged&#8221;はスペース文字で分割した単語を特徴量とします。</p>
+<blockquote>
+<div><div class="highlight-python"><pre>"string_types": {
+  "bigram":  { "method": "ngram", "char_num": "2" }
+},
+"string_rules": [
+  { "key": "user/name",        "type": "str",    "sample_weight": "bin", "global_weight": "bin" },
+  { "key": "message",          "type": "bigram", "sample_weight": "tf",  "global_weight": "bin" },
+  { "key": "message-detagged", "type": "space",  "sample_weight": "bin", "global_weight": "bin" }
+]</pre>
+</div>
+</div></blockquote>
+<p>この設定を用いた場合に得られる結果は以下のようになります。
+&#8220;message&#8221;は&#8221;bigram&#8221;設定なので2文字ずつに分割され、特徴量&#8221;H&gt;&#8221;は文字列中に2度出てくるのでその重みは2になります。</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="32%" />
+<col width="37%" />
+<col width="23%" />
+<col width="8%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">キー</th>
+<th class="head">文字列</th>
+<th class="head">特徴量</th>
+<th class="head">重み</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>&#8220;user/name&#8221;</td>
+<td>&#8220;Loren Ipsum&#8221;</td>
+<td>&#8220;Loren Ipsum&#8221;</td>
+<td>1</td>
+</tr>
+<tr class="row-odd"><td>&#8220;message&#8221;</td>
+<td>&#8221; &lt;H&gt;Hello World&lt;/H&gt;&#8221;</td>
+<td>&#8220;&lt;H&#8221;</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&#8220;H&gt;&#8221;</td>
+<td>2</td>
+</tr>
+<tr class="row-odd"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&#8220;&gt;H&#8221;</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&#8220;He&#8221;</td>
+<td>1</td>
+</tr>
+<tr class="row-odd"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&#8220;el&#8221;</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&#8220;ll&#8221;</td>
+<td>1</td>
+</tr>
+<tr class="row-odd"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&#8220;lo&#8221;</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&#8220;o &#8220;</td>
+<td>1</td>
+</tr>
+<tr class="row-odd"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&#8221; W&#8221;</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&#8220;Wo&#8221;</td>
+<td>1</td>
+</tr>
+<tr class="row-odd"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&#8220;or&#8221;</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&#8220;rl&#8221;</td>
+<td>1</td>
+</tr>
+<tr class="row-odd"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&#8220;ld&#8221;</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&#8220;d&lt;&#8221;</td>
+<td>1</td>
+</tr>
+<tr class="row-odd"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&#8220;&lt;/&#8221;</td>
+<td>1</td>
+</tr>
+<tr class="row-even"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&#8220;/H&#8221;</td>
+<td>1</td>
+</tr>
+<tr class="row-odd"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&#8220;H&gt;&#8221;</td>
+<td>2</td>
+</tr>
+<tr class="row-even"><td>&#8220;message-detagged&#8221;</td>
+<td>&#8220;Hello World&#8221;</td>
+<td>&#8220;Hello&#8221;</td>
+<td>1</td>
+</tr>
+<tr class="row-odd"><td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&#8220;World&#8221;</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>下記、設定の詳細を解説します。</p>
+<p><strong>string_types</strong></p>
+<p>string_typesで文字列特徴抽出器を定義します。主に、パスなどの引数を指定しなければならない特徴抽出器は、一度string_typesで指定してから利用しなければいけません。 string_filter_typesなどと同様、&lt;抽出器名&gt;:&lt;引数&gt; からなる辞書を指定します。 引数は文字列から文字列への辞書で、必ず&#8221;method&#8221;を指定する必要があります。 それ以外に必要な引数は&#8221;method&#8221;に応じて異なります。 指定できる&#8221;method&#8221;の値と、それぞれに対応した引数は以下のとおりです。</p>
+<blockquote>
+<div><ul class="simple">
+<li>ngram</li>
+</ul>
+<blockquote>
+<div><p>隣接するN文字を特徴量として利用します。こうした特徴量は文字N-gram特徴と呼ばれます。</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">char_num:</th><td class="field-body">利用する文字数の文字列表現を指定します。文字数は0より大きい必要があります。</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>例として、連続する2文字およぼ3文字を特徴として利用する、bigramとtrigramを定義する方法を記します。</p>
+<blockquote>
+<div><div class="highlight-python"><pre>"string_types": {
+  "bigram":  { "method": "ngram", "char_num": "2" },
+  "trigram": { "method": "ngram", "char_num": "3" }
+}</pre>
+</div>
+</div></blockquote>
+</div></blockquote>
+<ul class="simple">
+<li>dynamic</li>
+</ul>
+<blockquote>
+<div><p>プラグインを利用します。詳細は後述します。</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">path:</th><td class="field-body">プラグインのパスを指定します。</td>
+</tr>
+<tr class="field-even field"><th class="field-name">function:</th><td class="field-body">プラグインの呼び出し関数を指定します。</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<p><strong>string_rules</strong></p>
+<p>文字列特徴の抽出規則を指定します。 string_filter_rulesなどと同様、複数の規則を羅列します。 各規則は、&#8221;key&#8221;, &#8220;type&#8221;, &#8220;sample_weight&#8221;, &#8220;global_weight&#8221;からなる辞書で指定します。 文字列データの場合、与えられた文字列から特徴量を抽出し、そこに対して重みを設定する必要があります。 重みの設定の仕方を決めるのが、&#8221;sample_weight&#8221;と&#8221;global_weight&#8221;の2つのパラメータです。 実際に利用する重みは、2つの重みの積を重み付けとして利用します。</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">key:</th><td class="field-body"><p class="first">datumの各要素のどのkeyとマッチさせるかを指定します。string_filter_rulesを参照してください。&#8221;*&#8221;や&#8221;&#8220;を設定した場合は、フィルタ処理前の要素も特徴抽出されるので注意してください。&#8221;*-detagged&#8221;のように設定することで回避できます。</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">type:</th><td class="field-body"><p class="first">利用する抽出器名を指定します。これはstring_typesの項で作った抽出器名を指定します。また、以下の抽出器はデフォルトで利用できます。</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="16%" />
+<col width="84%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head"><p class="first last">値</p>
+</th>
+<th class="head"><p class="first last">意味</p>
+</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><p class="first last"><tt class="docutils literal"><span class="pre">&quot;str&quot;</span></tt></p>
+</td>
+<td><p class="first last">文字列分割を行わず、指定された文字列そのものを特徴として利用します。</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p class="first last"><tt class="docutils literal"><span class="pre">&quot;space&quot;</span></tt></p>
+</td>
+<td><p class="first last">スペース文字で分割を行い、分割された部分文字列を特徴として利用します。</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">sample_weight:</th><td class="field-body"><p class="first">各key-value毎の重み設定の仕方を指定します。これはkey-value一つに対して決定される重みです。</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="11%" />
+<col width="89%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head"><p class="first last">値</p>
+</th>
+<th class="head"><p class="first last">意味</p>
+</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><p class="first last"><tt class="docutils literal"><span class="pre">&quot;bin&quot;</span></tt></p>
+</td>
+<td><p class="first last">重みを常に1とします。</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p class="first last"><tt class="docutils literal"><span class="pre">&quot;tf&quot;</span></tt></p>
+</td>
+<td><p class="first last">与えられた文字列中で出現する回数で重み付けをします。例えば5回&#8221;hello&#8221;が出現したら、重みを5にします。</p>
+</td>
+</tr>
+<tr class="row-even"><td><p class="first last"><tt class="docutils literal"><span class="pre">&quot;log_tf&quot;</span></tt></p>
+</td>
+<td><p class="first last">tfの値に1を足してlogを取った値を重み付けに利用します。例えば5回&#8221;hello&#8221;が出現したら、重みはlog(5 + 1)にします。</p>
+</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">global_weight:</th><td class="field-body"><p class="first">今までの通算データをから算出される、大域的な重み付けを指定します。</p>
+<table border="1" class="last docutils">
+<colgroup>
+<col width="7%" />
+<col width="93%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head"><p class="first last">値</p>
+</th>
+<th class="head"><p class="first last">意味</p>
+</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><p class="first last"><tt class="docutils literal"><span class="pre">&quot;bin&quot;</span></tt></p>
+</td>
+<td><p class="first last">重みを常に1とします。</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p class="first last"><tt class="docutils literal"><span class="pre">&quot;idf&quot;</span></tt></p>
+</td>
+<td><p class="first last">文書正規化頻度の逆数の対数を利用します。例えば文書1000件中で50件にその特徴が含まれた場合、重みはlog(1000/50)にします。大まかには出現頻度の少ない特徴ほど大きな重みが設定されます。</p>
+</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>sample_weightとglobal_weightは、ともにbinにしておいても通常のケースでは正しく動作します。 また、例えば分類問題など重み自体を学習するケースでは、ともにbinにしておいても自動的に調整されます。</p>
+</div>
+<div class="section" id="id6">
+<h3>3.2.5.2.数値からの特徴抽出<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<p>数値型に対しても、文字列型同様変換ルールを記述します。 また、数値型に関しても、ユーザー定義の変換器を定義することができます。</p>
+<blockquote>
+<div><div class="highlight-python"><pre>"num_types": {
+ },
+ "num_rules": [
+   { "key": "user/age",       "type": "num" },
+   { "key": "user/income",    "type": "log" },
+   { "key": "user/age_kazoe", "type": "num" }
+ ]</pre>
+</div>
+</div></blockquote>
+<p>この設定を用いた場合に得られる結果は以下のようになります。
+&#8220;user/income&#8221;のみ与えられた数値の対数を重みに利用する設定にしています。</p>
+<blockquote>
+<div><div class="highlight-python"><pre>(
+  [
+    ("user/id", "ippy"),
+    ("user/name", "Loren Ipsum"),
+    ("message", "&lt;H&gt;Hello World&lt;/H&gt;"),
+    ("message-detagged", "Hello World")
+  ],
+  [
+    ("user/age", 29),                                 ← 重み = 29
+    ("user/age_kazoe", 30) ,                  ← 重み = 30
+    ("user/income", 100000)                   ← 重み = log(100000) = 5
+  ]
+)</pre>
+</div>
+</div></blockquote>
+<p>下記、設定の詳細を解説します。</p>
+<p><strong>num_types</strong></p>
+<p>num_typesで数値データに対しる特徴抽出器を定義します。 string_typesなどと同様、&lt;抽出器名&gt;: &lt;引数&gt; からなる辞書を指定します。 引数は文字列から文字列への辞書で、必ず&#8221;method&#8221;を指定する必要があります。 それ以外に必要な引数は&#8221;method&#8221;に応じて異なります。 指定できる&#8221;method&#8221;の値と、それぞれに対応した引数は以下のとおりです。</p>
+<blockquote>
+<div><ul class="simple">
+<li>dynamic</li>
+</ul>
+<blockquote>
+<div><p>プラグインを利用します。詳細は後述します。</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">path:</th><td class="field-body">プラグインのパスを指定します。</td>
+</tr>
+<tr class="field-even field"><th class="field-name">function:</th><td class="field-body">プラグインの呼び出し関数を指定します。</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</div></blockquote>
+</div></blockquote>
+<p><strong>num_rules</strong></p>
+<p>数値特徴の抽出規則を指定します。 string_rulesなどと同様、複数の規則を羅列します。 各規則は、&#8221;key&#8221;, &#8220;type&#8221;からなる辞書で指定します。 重みの付け方や特徴名の指定の仕方もそれぞれの&#8221;type&#8221;ごとに異なります。</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">key:</th><td class="field-body"><p class="first">datumの各要素のどのkeyとマッチさせるかを指定します。詳細はstring_filter_rulesを参照してください。&#8221;*&#8221;や&#8221;&#8220;を設定した場合は、フィルタ処理前の要素も特徴抽出されるので注意してください。</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">type:</th><td class="field-body"><p class="first">利用する抽出器名を指定します。これはnum_typesの項で作った抽出器名を指定します。ただし、以下の抽出器はデフォルトで利用できます。</p>
+<table border="1" class="last docutils">
+<colgroup>
+<col width="8%" />
+<col width="92%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head"><p class="first last">値</p>
+</th>
+<th class="head"><p class="first last">意味</p>
+</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><p class="first last"><tt class="docutils literal"><span class="pre">&quot;num&quot;</span></tt></p>
+</td>
+<td><p class="first last">与えられた数値をそのまま重みに利用します。</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p class="first last"><tt class="docutils literal"><span class="pre">&quot;log&quot;</span></tt></p>
+</td>
+<td><p class="first last">与えられた数値の対数を重みに利用します。但し、数値が1以下の場合は0とします。</p>
+</td>
+</tr>
+<tr class="row-even"><td><p class="first last"><tt class="docutils literal"><span class="pre">&quot;str&quot;</span></tt></p>
+</td>
+<td><p class="first last">与えられた数値を文字列として扱います。これは、例えばIDなど、数値自体の大きさに意味のないデータに対して利用します。重みは1とします。</p>
+</td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="id7">
+<h2>3.2.6.特徴ベクトルのキーのハッシュ化<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
+<p>Jubatusでは特徴ベクトルのキーをハッシュ化することでメモリ消費を抑えることができます。特徴ベクトルのキーをハッシュ化することで、特徴ベクトルの次元数の最大長を制限することができますが、ハッシュの衝突により学習精度の低下が発生する可能性があります。</p>
+<p>この機能はデフォルトでは無効です。使用するには、変換設定にhash_max_sizeを指定します。</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s">&quot;string_filter_types&quot;</span><span class="p">:</span> <span class="p">{},</span>
+  <span class="s">&quot;string_filter_rules&quot;</span><span class="p">:</span> <span class="p">[],</span>
+  <span class="s">&quot;num_filter_types&quot;</span><span class="p">:</span> <span class="p">{},</span>
+  <span class="s">&quot;num_filter_rules&quot;</span><span class="p">:</span> <span class="p">[],</span>
+  <span class="s">&quot;string_types&quot;</span><span class="p">:</span> <span class="p">{},</span>
+  <span class="s">&quot;string_rules&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s">&quot;key&quot;</span><span class="p">:</span> <span class="s">&quot;*&quot;</span><span class="p">,</span> <span class="s">&quot;type&quot;</span> <span class="p">:</span> <span class="s">&quot;str&quot;</span><span class="p">,</span> <span class="s">&quot;sample_weight&quot;</span><span class="p">:</span> <span class="s">&quot;bin&quot;</span><span class="p">,</span> <span class="s">&quot;global_weight&quot;</span> <span class="p">:</span> <span class="s">&quot;bin&quot;</span><span class="p">}],</span>
+  <span class="s">&quot;num_types&quot;</span><span class="p">:</span> <span class="p">{},</span>
+  <span class="s">&quot;num_rules&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s">&quot;key&quot;</span> <span class="p">:</span> <span class="s">&quot;*&quot;</span><span class="p">,</span> <span class="s">&quot;type&quot;</span> <span class="p">:</span> <span class="s">&quot;num&quot;</span><span class="p">}],</span>
+  <span class="s">&quot;hash_max_size&quot;</span><span class="p">:</span> <span class="mi">16</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>最適なhash_max_sizeの値は、使用するデータセットおよび環境により異なります。hash_max_sizeが制限するのは入力される datum のキー数ではなく、(変換後の) 特徴ベクトルのキー数であることに注意してください。</p>
+</div>
+<div class="section" id="id8">
+<h2>3.2.7.プラグイン<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h2>
+<p>フィルタと抽出器では、それぞれプラグインを利用することができます。プラグインは単体の動的ライブラリファイル（.soファイル）です。
+ここではプラグインの使い方について解説します。</p>
+<p>各フィルタと抽出器のいずれの場合も、プラグインの指定の仕方は同じです。CLASS_types(CLASS は string または num)で、フィルタや抽出器を指定する際のパラメータで、&#8221;method&#8221;に&#8221;dynamic&#8221;を、&#8221;path&#8221;に.soファイルへのパスを、&#8221;function&#8221;に各プラグイン固有の呼び出し関数名を指定します。 プラグインのパスは、原則としてフルパスですが、デフォルトのプラグインディレクトリ (多くの場合は $PREFIX/lib/jubatus/plugin または $PREFIX/lib64/jubatus/plugin) に格納されているプラグインについてはファイル名のみで指定することもできます。また、その他のパラメータに関しては、各プラグイン固有のパラメータを渡します。</p>
+<p>Jubatusでは、デフォルトで以下の3つの文字列特徴量のプラグインが提供されています。ただし、コンパイルオプションによっては一部のプラグインがビルドされないため、注意してください。</p>
+<blockquote>
+<div><ul class="simple">
+<li>libmecab_splitter.so</li>
+</ul>
+<blockquote>
+<div><p>string_typesで指定できます。MeCabを利用して文書を単語分割し、各単語を特徴量として利用します。&#8211;enable-mecabオプション付きでコンパイルした場合のみ利用可能です。</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">function:</th><td class="field-body">&#8220;create&#8221;を指定します。</td>
+</tr>
+<tr class="field-even field"><th class="field-name">arg:</th><td class="field-body">MeCabエンジンに渡す引数を指定します。この指定がないと、MeCabのデフォルト設定で動作します。引数の指定の仕方は、<a class="reference external" href="http://mecab.googlecode.com/svn/trunk/mecab/doc/mecab.html">MeCab のドキュメント</a> を参照してください。</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><pre>"string_types": {
+  "ux": {
+    "method": "dynamic",
+    "path": "libux_splitter.so",
+    "function": "create",
+    "dict_path": "/path/to/keyword/dic"
+  }
+}</pre>
+</div>
+</div></blockquote>
+</div></blockquote>
+<ul class="simple">
+<li>libre2_splitter.so</li>
+</ul>
+<blockquote>
+<div><p>string_typesで指定できます。ux-trieを利用して、与えられた文書から最長一致で辞書マッチするキーワードを抜き出して、それぞれを特徴量として利用します。 単純な最長一致なので、高速だが精度が悪い可能性がある点には注意してください。&#8211;enable-uxオプション付きでコンパイルした場合のみ利用可能です。</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">function:</th><td class="field-body">&#8220;create&#8221;を指定します。</td>
+</tr>
+<tr class="field-even field"><th class="field-name">dict_path:</th><td class="field-body">1行1行キーワードで書かれた辞書ファイルの場所を、フルパスで指定します。</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python"><pre>"string_types": {
+  "ux": {
+    "method": "dynamic",
+    "path": "libux_splitter.so",
+    "function": "create",
+    "dict_path": "/path/to/keyword/dic"
+  }
+}</pre>
+</div>
+</div></blockquote>
+</div></blockquote>
+<ul class="simple">
+<li>libre2_splitter.so</li>
+</ul>
+<blockquote>
+<div><p>string_typesで指定できます。re2を利用して、与えられた文書から正規表現を利用してキーワードを抜き出して、それぞれを特徴量として利用します。正規表現マッチは連続的に行われ、マッチした箇所全てを特徴として使います。&#8211;disable-re2オプションを指定せずにコンパイルした場合のみ利用可能です。</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">function:</th><td class="field-body">&#8220;create&#8221;を指定します。</td>
+</tr>
+<tr class="field-even field"><th class="field-name">pattern:</th><td class="field-body">マッチさせる正規表現を指定します。</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">group:</th><td class="field-body">キーワードとして取り出すグループを指定します。0ならマッチした全体で、1以上の値を指定すると()で取り出したグループだけをキーワードとします。省略すると0として扱います。</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>最も簡単な例として、以下では日付表現を全て取り出します。</p>
+<div class="highlight-python"><pre>"string_types": {
+  "date": {
+    "method": "dynamic",
+    "path": "libre2_splitter.so",
+    "function": "create",
+    "pattern": "[0-9]{4}/[0-9]{2}/[0-9]{2}"
+  }
+}</pre>
+</div>
+<p>パターンの一部だけを利用するときは、&#8221;group&#8221;引数を利用します。たとえば、以下の様な設定で年齢がとれます。</p>
+<div class="highlight-python"><pre>"string_types": {
+  "age": {
+    "method": "dynamic",
+    "path": "libre2_splitter.so",
+    "function": "create",
+    "pattern": "(age|Age)([ :=])([0-9]+)",
+    "group": "3"
+  }
+}</pre>
+</div>
+</div></blockquote>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">3.2. 特徴ベクトル（FV）コンバータの利用法</a><ul>
+<li><a class="reference internal" href="#id1">3.2.1.特徴ベクトル（FV）コンバータ概要</a></li>
+<li><a class="reference internal" href="#jubatus">3.2.2.Jubatusで利用できるデータ形式</a></li>
+<li><a class="reference internal" href="#id2">3.2.3.データ変換の流れ</a></li>
+<li><a class="reference internal" href="#id3">3.2.4.フィルタ処理</a></li>
+<li><a class="reference internal" href="#id4">3.2.5.特徴抽出処理</a><ul>
+<li><a class="reference internal" href="#id5">3.2.5.1.文字列からの特徴抽出</a></li>
+<li><a class="reference internal" href="#id6">3.2.5.2.数値からの特徴抽出</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id7">3.2.6.特徴ベクトルのキーのハッシュ化</a></li>
+<li><a class="reference internal" href="#id8">3.2.7.プラグイン</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="03_01_Install_Jubatus_Client_Libraries.html"
+                        title="previous chapter">3.1. Jubatusクライアントライブラリのインストール方法</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="03_03_Sample_Program.html"
+                        title="next chapter">3.3. サンプルプログラム</a></p>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="03_03_Sample_Program.html" title="3.3. サンプルプログラム"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="03_01_Install_Jubatus_Client_Libraries.html" title="3.1. Jubatusクライアントライブラリのインストール方法"
+             >previous</a> |</li>
+        <li><a href="../index.html">Jubatus_Manual_for_Developer 0.1 documentation</a> &raquo;</li>
+          <li><a href="03_00_For_Application_Developer.html" >3. アプリケーション開発者向けマニュアル</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, NTT Advanced Technology.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,169 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>2.1. Jubatusシステムインストール手順 &mdash; Jubatus_Manual_for_Developer 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Jubatus_Manual_for_Developer 0.1 documentation" href="../index.html" />
+    <link rel="up" title="2. 運用者向けマニュアル" href="02_00_For_System_Provider.html" />
+    <link rel="next" title="2.2. Jubatusクラスタ構築・運用法" href="02_02_Cluster_Management.html" />
+    <link rel="prev" title="2. 運用者向けマニュアル" href="02_00_For_System_Provider.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="02_02_Cluster_Management.html" title="2.2. Jubatusクラスタ構築・運用法"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="02_00_For_System_Provider.html" title="2. 運用者向けマニュアル"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Jubatus_Manual_for_Developer 0.1 documentation</a> &raquo;</li>
+          <li><a href="02_00_For_System_Provider.html" accesskey="U">2. 運用者向けマニュアル</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="jubatus">
+<h1>2.1. Jubatusシステムインストール手順<a class="headerlink" href="#jubatus" title="Permalink to this headline">¶</a></h1>
+<p>本項では、Jubatusシステムのインストール手順を説明します。</p>
+<div class="section" id="id1">
+<h2>2.1.1. 前提<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>Jubatusは、Ubuntu Server 12.04 LTS(x86_64)とRed Hat Enterprise Linux 6.2以降(x86_64)が公式にサポートされています。これらのシステムでは、Jubatusのすべてのコンポーネントをバイナリパッケージでインストールすることができます。</p>
+<p>ここでは、Ubuntu Server 12.04.1 LTS(x86_64)を想定して説明していきます。</p>
+<p>対象とするシステム構成は、以下のような最もシンプルなサーバ1台の構成とします。</p>
+<img alt="../_images/server_client.png" src="../_images/server_client.png" />
+</div>
+<div class="section" id="id2">
+<h2>2.1.2. インストールの流れ<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>Ubuntu ServerへのJubatusシステムのインストールと事前準備は、以下の流れで作業を行います。</p>
+<blockquote>
+<div><p>① JubatusのAptリポジトリにシステムを登録</p>
+<p>② jubatusパッケージのインストール</p>
+<p>③ 環境変数の読み込み</p>
+</div></blockquote>
+</div>
+<div class="section" id="id3">
+<h2>2.1.3. インストール手順詳細<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<p>① JubatusのAptリポジトリにシステムを登録</p>
+<blockquote>
+<div><p>/etc/apt/sources.list.d/jubatus.listを作成し、作成したjubatus.listに以下の行を記述します。</p>
+<div class="highlight-python"><pre>$ cd /etc/apt/sources.list.d
+$ sudo vi jubatus.list</pre>
+</div>
+<div class="highlight-python"><pre>deb http://download.jubat.us/apt binary/</pre>
+</div>
+</div></blockquote>
+<p>② jubatusパッケージのインストール</p>
+<blockquote>
+<div><p>apt-getコマンドを実行しjubatusパッケージをインストールします。</p>
+<div class="highlight-python"><pre>$ sudo apt-get update
+$ sudo apt-get install jubatus</pre>
+</div>
+<p>※プロキシを経由している場合、aptのプロキシ設定をしていないとエラーが出力されますので、/etc/apt/apt.confに以下の行を追加してください。</p>
+<blockquote>
+<div><div class="highlight-python"><pre>$ cd /etc/apt
+$ sudo vi apt.conf</pre>
+</div>
+<div class="highlight-python"><pre>Acquire::http::Proxy "http://username:password@proxy.example.com:port/";</pre>
+</div>
+</div></blockquote>
+<p>また、現在パッケージにはGPG署名が行われていません。以下の警告メッセージが表示された場合は、 y を入力してください。</p>
+<div class="highlight-python"><pre>警告: 以下のパッケージは認証されていません!
+ jubatus
+検証なしにこれらのパッケージをインストールしますか [y/N]? y</pre>
+</div>
+<p>インストールしているログが流れ、最後に以下のようなメッセージが出力されます。</p>
+<div class="highlight-python"><pre>(.../jubatus_0.4.1-1_amd64.deb から) jubatus を展開しています...
+jubatus (0.4.1-1) を設定しています ...</pre>
+</div>
+<p>/opt/jubatus のフォルダが作成されていることを確認してください。これでJubatusがインストールされました。</p>
+</div></blockquote>
+<p>③ 環境変数の読み込み</p>
+<blockquote>
+<div><p>Jubatusを使う前に、毎回profileスクリプトから環境変数を読み込む必要があります。
+Jubatus起動前に、以下のコマンドを実行してください。</p>
+<div class="highlight-python"><pre>$ source /opt/jubatus/profile</pre>
+</div>
+<p>以上でJubatusシステムのインストールと事前準備が完了しました。</p>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">2.1. Jubatusシステムインストール手順</a><ul>
+<li><a class="reference internal" href="#id1">2.1.1. 前提</a></li>
+<li><a class="reference internal" href="#id2">2.1.2. インストールの流れ</a></li>
+<li><a class="reference internal" href="#id3">2.1.3. インストール手順詳細</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="02_00_For_System_Provider.html"
+                        title="previous chapter">2. 運用者向けマニュアル</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="02_02_Cluster_Management.html"
+                        title="next chapter">2.2. Jubatusクラスタ構築・運用法</a></p>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="02_02_Cluster_Management.html" title="2.2. Jubatusクラスタ構築・運用法"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="02_00_For_System_Provider.html" title="2. 運用者向けマニュアル"
+             >previous</a> |</li>
+        <li><a href="../index.html">Jubatus_Manual_for_Developer 0.1 documentation</a> &raquo;</li>
+          <li><a href="02_00_For_System_Provider.html" >2. 運用者向けマニュアル</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, NTT Advanced Technology.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

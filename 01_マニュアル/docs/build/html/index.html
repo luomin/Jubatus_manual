@@ -1,0 +1,287 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Jubatusマニュアル &mdash; Jubatus_Manual_for_Developer 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Jubatus_Manual_for_Developer 0.1 documentation" href="#" />
+    <link rel="next" title="1. Jubatus概要" href="doc/01_00_Summary.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="doc/01_00_Summary.html" title="1. Jubatus概要"
+             accesskey="N">next</a> |</li>
+        <li><a href="#">Jubatus_Manual_for_Developer 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="jubatus">
+<h1>Jubatusマニュアル<a class="headerlink" href="#jubatus" title="Permalink to this headline">¶</a></h1>
+<p><strong>Jubatusとは</strong></p>
+<p>Jubatusは「大量データ」を「常に素早く」「深く分析」することを狙った分散基盤技術です。</p>
+<p>Jubatusの名前の由来は、俊敏な動物であるチータの学術名からの命名で、「ユバタス」と読みます。株式会社Preferred InfrastructureとNTTソフトウェアイノベーションセンタの共同開発した、日本初となるビッグデータオープンソースプロダクトです。</p>
+<p>最終的に全ての人にスケーラブルなオンライン機械学習フレームワークを提供することがJubatusの目標です。</p>
+<div class="section" id="id1">
+<h2>目次<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="doc/01_00_Summary.html">1. Jubatus概要</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="doc/01_01_Feature.html">1.1. Jubatusの特徴</a></li>
+<li class="toctree-l2"><a class="reference internal" href="doc/01_02_Machine_Learning.html">1.2. Jubatusの機械学習ラインナップと利用シーン</a></li>
+<li class="toctree-l2"><a class="reference internal" href="doc/01_03_Architecture.html">1.3. アーキテクチャ概要</a></li>
+<li class="toctree-l2"><a class="reference internal" href="doc/01_04_Mix.html">1.4. 分散学習機構Mixの概念説明</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="doc/02_00_For_System_Provider.html">2. 運用者向けマニュアル</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="doc/02_01_Install_Jubatus.html">2.1. Jubatusシステムインストール手順</a></li>
+<li class="toctree-l2"><a class="reference internal" href="doc/02_02_Cluster_Management.html">2.2. Jubatusクラスタ構築・運用法</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="doc/03_00_For_Application_Developer.html">3. アプリケーション開発者向けマニュアル</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="doc/03_01_Install_Jubatus_Client_Libraries.html">3.1. Jubatusクライアントライブラリのインストール方法</a></li>
+<li class="toctree-l2"><a class="reference internal" href="doc/03_02_FVConvertor.html">3.2. 特徴ベクトル（FV）コンバータの利用法</a></li>
+<li class="toctree-l2"><a class="reference internal" href="doc/03_03_Sample_Program.html">3.3. サンプルプログラム</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="doc/04_00_QandA.html">4. Q&amp;A</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="id2">
+<h2>想定読者スキルレベル定義<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>本マニュアルは、「運用者向けマニュアル」および「アプリケーション開発者向けマニュアル」から構成されます。</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>・運用者向けマニュアルの想定読者</dt>
+<dd>Jubatusのインストール作業や、インストール後のシステム保守・運用を行う方</dd>
+<dt>・アプリケーション開発者向けマニュアルの想定読者</dt>
+<dd>Jubatusの機械学習アルゴリズムを利用した、各種分析プログラムを開発される方</dd>
+</dl>
+</div></blockquote>
+<p>Jubatusをご利用頂く上で必要となる、5つのスキル分野（Linux、パッケージ管理、分散システム、機械学習、プログラミング）に関して、
+各マニュアルの読者に求められるスキルレベルを以下に定義します。</p>
+<p>なお、各スキル分野のスキルレベルの詳細は後述の表をご参照ください。</p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><em>運用者向けマニュアル</em></p>
+<blockquote>
+<div><p>・ Linux：カーネルパラメータの設定変更を行うことができる（レベル3）</p>
+<p>・ パッケージ管理：tar ballからパッケージをインストールすることができる（レベル3）</p>
+<p>・ 分散システム：分散処理手法に関する基本的な知識を有し、分散システムの開発・構築を行うことができる（レベル3）</p>
+<p>・ 機械学習：Jubatusにおける機械学習アルゴリズムのコンセプトやアーキテクチャをある程度理解している（レベル1）</p>
+<p>・ プログラミング：プログラムの更新・バージョンアップを行うことができる（レベル2）</p>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><em>アプリケーション開発者向けマニュアル</em></p>
+<blockquote>
+<div><p>・ Linux：各種デーモンの起動や、ログを参照した問題解決を行うことができる（レベル2）</p>
+<p>・ パッケージ管理：Webを参照しながらパッケージの設定を行える（レベル2）</p>
+<p>・ 分散システム：クライアントサーバ型システムの仕組みを理解している（レベル1）</p>
+<p>・ 機械学習：マニュアルに沿ってJubatusの機械学習を使用することができる（レベル2） ～ 新しい機械学習手法に関する論文を理解することができる（レベル3）</p>
+<p>・ プログラミング：デバッグに関する基本的なスキルを有し、デバッガを使いこなすことができる（レベル3）</p>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><em>各スキル分野のスキルレベルの詳細</em></p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="7%" />
+<col width="19%" />
+<col width="19%" />
+<col width="19%" />
+<col width="19%" />
+<col width="19%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head" rowspan="2">レベル</th>
+<th class="head" colspan="5">スキル分野</th>
+</tr>
+<tr class="row-even"><th class="head">Linux</th>
+<th class="head">パッケージ管理</th>
+<th class="head">分散システム</th>
+<th class="head">機械学習</th>
+<th class="head">プログラミング言語</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-odd"><td>5（高）</td>
+<td>カーネルのカスタマイズ
+を適切に行うことができ
+る</td>
+<td>パッケージのカスタマイ
+ズを適切に行うことが
+できる</td>
+<td>問題解決に向けた新しい
+分散処理手法を提案する
+ことができる</td>
+<td>問題解決に向けた新しい
+機械学習アルゴリズムを
+提案することができる</td>
+<td>システムアーキテクチャ
+の設計を行うことができ
+る</td>
+</tr>
+<tr class="row-even"><td>4</td>
+<td>アプリケーションに応じ
+て適切なチューニングを
+行うことができる</td>
+<td>パッケージに応じて適切
+なチューニングを行う
+ことができる</td>
+<td>新しい分散処理手法に
+関する論文を理解する
+ことができ、実システム
+に適用することができる</td>
+<td>機械学習に関するプロ
+グラムに応じて適切な
+チューニングを行うこと
+ができる</td>
+<td>ソースコードのリファク
+タリングや、高度なプロ
+グラミング（マルチスレ
+ッド、ネットワーク関連）
+およびそのデバッグを
+行うことができる</td>
+</tr>
+<tr class="row-odd"><td>3</td>
+<td>カーネルパラメータの
+設定変更を行うことが
+できる</td>
+<td>tar ballからパッケージ
+をインストールすること
+ができる</td>
+<td>分散処理手法に関する
+基本的な知識を有し、
+分散システムの開発・
+構築を行うことができる</td>
+<td>新しい機械学習手法に
+関する論文を理解する
+ことができる</td>
+<td>デバッグに関する基本的
+なスキルを有し、デバッ
+ガを使いこなすことが
+できる</td>
+</tr>
+<tr class="row-even"><td>2</td>
+<td>各種デーモンの起動や、
+ログを参照した問題解決
+を行うことができる</td>
+<td>Webを参照しながら
+パッケージの設定を
+行うことができる</td>
+<td>HadoopやZookeeprの
+仕組みを理解している</td>
+<td>マニュアルに沿って
+Jubatusの機械学習を
+使用することができる</td>
+<td>プログラムの更新・バー
+ジョンアップを行うこと
+ができる</td>
+</tr>
+<tr class="row-odd"><td>1（低）</td>
+<td>ls、cp、catなどの基本
+的なコマンドを使用する
+ことができる</td>
+<td>パッケージマネージャ
+を使用して追加パッケ
+ージをインストールする
+ことができる</td>
+<td>クライアントサーバ型
+システムの仕組みを
+理解している</td>
+<td>Jubatusにおける機械学
+習アルゴリズムのコンセ
+プトやアーキテクチャを
+ある程度理解している</td>
+<td>プログラムソースコード
+を読むことができ、ある
+程度のコーディング
+（品質は問わない）を
+行うことができる</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Jubatusマニュアル</a><ul>
+<li><a class="reference internal" href="#id1">目次</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#id2">想定読者スキルレベル定義</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="doc/01_00_Summary.html"
+                        title="next chapter">1. Jubatus概要</a></p>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="doc/01_00_Summary.html" title="1. Jubatus概要"
+             >next</a> |</li>
+        <li><a href="#">Jubatus_Manual_for_Developer 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, NTT Advanced Technology.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

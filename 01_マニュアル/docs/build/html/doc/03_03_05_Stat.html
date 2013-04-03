@@ -1,0 +1,180 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>3.3.5. Stat &mdash; Jubatus_Manual_for_Developer 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Jubatus_Manual_for_Developer 0.1 documentation" href="../index.html" />
+    <link rel="up" title="3.3. サンプルプログラム" href="03_03_Sample_Program.html" />
+    <link rel="next" title="3.3.5.3. Java" href="03_03_05_03_Stat_Java.html" />
+    <link rel="prev" title="3.3.4.5. Ruby" href="03_03_04_05_Graph_Ruby.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="03_03_05_03_Stat_Java.html" title="3.3.5.3. Java"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="03_03_04_05_Graph_Ruby.html" title="3.3.4.5. Ruby"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Jubatus_Manual_for_Developer 0.1 documentation</a> &raquo;</li>
+          <li><a href="03_00_For_Application_Developer.html" >3. アプリケーション開発者向けマニュアル</a> &raquo;</li>
+          <li><a href="03_03_Sample_Program.html" accesskey="U">3.3. サンプルプログラム</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="stat">
+<h1>3.3.5. Stat<a class="headerlink" href="#stat" title="Permalink to this headline">¶</a></h1>
+<p>ここではJubatusの統計分析機能（Stat）である、jubastatを使用した、Jubatus Clientの使い方を説明します。</p>
+<p>統計分析機能（Stat）とは、時系列データのウィンドウ設定つき統計分析機能であり、センサー監視や異常データ検知などに利用することができます。</p>
+<div class="section" id="id1">
+<h2>3.3.5.1. サンプルプログラムの概要<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>サンプルとして、オレンジ・りんご・メロンの直径・重さ・価格を学習し、フルーツ毎にパラメータの合計値や標準偏差など統計分析をするプログラム「trivial_stat」を用いて説明していきます。</p>
+<p>最初に、サンプル用に人工的に作成したデータセット（<a class="reference download internal" href="../_downloads/fruit.csv"><tt class="xref download docutils literal"><span class="pre">fruit.csv</span></tt></a> ）をクライアント側で用意し、統計分析するためのモデルをサーバ側に学習させます。</p>
+<p>次に、StatClientのメソッドでそれぞれのフルーツに対して合計や標準偏差などを返却するメソッドを呼び出します。</p>
+</div>
+<div class="section" id="id2">
+<h2>3.3.5.2. 処理の流れ<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>Jubatus Clientを使ったコーディングは、主に以下の流れになります。</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>① Jubatus Serverへの接続設定</dt>
+<dd>サーバ側で起動している Jubatus ServerのHOSTやPORTを指定し、接続設定をします。</dd>
+<dt>② 学習用データの準備</dt>
+<dd>fruit.csvから1行ずつ読み出し学習用データを作成します。</dd>
+<dt>③ データの学習（学習モデルの更新）</dt>
+<dd>作成した学習用データをpushメソッドでサーバ側に与え、学習を行います。</dd>
+<dt>④ 結果の出力</dt>
+<dd>statClientの合計や標準偏差を求めるメソッドを呼び出し、結果を出力します。</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="java">
+<h2>3.3.5.3. Java<a class="headerlink" href="#java" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="03_03_05_03_Stat_Java.html">3.3.5.3. Java</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="03_03_05_03_Stat_Java.html#id1">3.3.5.3.1. ソースコード</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_03_05_03_Stat_Java.html#id2">3.3.5.3.2. 解説</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_03_05_03_Stat_Java.html#id3">3.3.5.3.3. サンプルプログラムの実行</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="python">
+<h2>3.3.5.4. Python<a class="headerlink" href="#python" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="03_03_05_04_Stat_Python.html">3.3.5.4. Python</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="03_03_05_04_Stat_Python.html#id1">3.3.5.4.1. ソースコード</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_03_05_04_Stat_Python.html#id2">3.3.5.4.2. 解説</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_03_05_04_Stat_Python.html#id3">3.3.5.4.3. サンプルプログラムの実行</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="ruby">
+<h2>3.3.5.5. Ruby<a class="headerlink" href="#ruby" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="03_03_05_05_Stat_Ruby.html">3.3.5.5. Ruby</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="03_03_05_05_Stat_Ruby.html#id1">3.3.5.5.1. ソースコード</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_03_05_05_Stat_Ruby.html#id2">3.3.5.5.2. 解説</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_03_05_05_Stat_Ruby.html#id3">3.3.5.5.3. サンプルプログラムの実行</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">3.3.5. Stat</a><ul>
+<li><a class="reference internal" href="#id1">3.3.5.1. サンプルプログラムの概要</a></li>
+<li><a class="reference internal" href="#id2">3.3.5.2. 処理の流れ</a></li>
+<li><a class="reference internal" href="#java">3.3.5.3. Java</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#python">3.3.5.4. Python</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#ruby">3.3.5.5. Ruby</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="03_03_04_05_Graph_Ruby.html"
+                        title="previous chapter">3.3.4.5. Ruby</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="03_03_05_03_Stat_Java.html"
+                        title="next chapter">3.3.5.3. Java</a></p>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="03_03_05_03_Stat_Java.html" title="3.3.5.3. Java"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="03_03_04_05_Graph_Ruby.html" title="3.3.4.5. Ruby"
+             >previous</a> |</li>
+        <li><a href="../index.html">Jubatus_Manual_for_Developer 0.1 documentation</a> &raquo;</li>
+          <li><a href="03_00_For_Application_Developer.html" >3. アプリケーション開発者向けマニュアル</a> &raquo;</li>
+          <li><a href="03_03_Sample_Program.html" >3.3. サンプルプログラム</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, NTT Advanced Technology.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

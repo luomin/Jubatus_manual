@@ -1,0 +1,119 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>4. Q&amp;A &mdash; Jubatus_Manual_for_Developer 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Jubatus_Manual_for_Developer 0.1 documentation" href="../index.html" />
+    <link rel="prev" title="3.3.6.5. Ruby" href="03_03_06_05_LOF_Ruby.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="03_03_06_05_LOF_Ruby.html" title="3.3.6.5. Ruby"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Jubatus_Manual_for_Developer 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="q-a">
+<h1>4. Q&amp;A<a class="headerlink" href="#q-a" title="Permalink to this headline">¶</a></h1>
+<p>本項では、JubatusシステムにおけるQ&amp;Aを記載します。</p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><em>Q : Jubatusサーバを複数台で分散させた場合、Mixが正常動作したか確認する方法はありますか？</em></p>
+<p>A : Mixの動作については、Jubatusサーバにおいて出力されるログにより確認することができます。以下のようなログが出力されます。</p>
+<blockquote>
+<div><div class="highlight-python"><pre>I0218 06:01:49.587540  3845 linear_mixer.cpp:173] starting mix:
+I0218 06:01:49.703693  3845 linear_mixer.cpp:231] mixed with 3 servers in 0.112371 secs, 8 bytes (serialized data) has been put.
+I0218 06:01:49.705159  3845 linear_mixer.cpp:185] .... 22th mix done.
+I0218 06:03:15.502995  3845 linear_mixer.cpp:173] starting mix:
+I0218 06:03:15.642297  3845 linear_mixer.cpp:231] mixed with 3 servers in 0.137258 secs, 8 bytes (serialized data) has been put.
+I0218 06:03:15.644685  3845 linear_mixer.cpp:185] .... 23th mix done.</pre>
+</div>
+</div></blockquote>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><em>Q : 分散構成のJubatusを準備する場合、jubaclassifier、jubaclassifier_keeper/Client、ZooKeeperを1台のサーバにインストールし、その構成のサーバを複数用意しても問題ありませんか？</em></p>
+<p>A : 問題ありません。但し、各プロセスを単独のサーバで動作させた場合と比べ、処理性能が低下する可能性があります。またZooKeeperは奇数台でアンサンブルを構成することを推奨いたします。</p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<dl class="docutils">
+<dt><em>Q : Jubatusに学習をさせる場合、以下のような学習のさせ方の違いにより、学習モデルに差異は発生しますか？</em></dt>
+<dd><p class="first">・ 学習データを一括してJubatusに渡し学習させる（trainメソッドを1度だけ呼び出す）</p>
+<p class="last">・ 学習データの数だけtrainメソッドを呼び出し、学習させる</p>
+</dd>
+</dl>
+<p>A : いいえ、学習モデルに差異は発生しません。</p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><em>Q ： Classifier（shogun）のpython版サンプルにおいて、学習データをshuffleする処理を実行しておりますが、shuffleは必須ですか？</em></p>
+<p>A : はい、shuffleは必須です。</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="03_03_06_05_LOF_Ruby.html"
+                        title="previous chapter">3.3.6.5. Ruby</a></p>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="03_03_06_05_LOF_Ruby.html" title="3.3.6.5. Ruby"
+             >previous</a> |</li>
+        <li><a href="../index.html">Jubatus_Manual_for_Developer 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, NTT Advanced Technology.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

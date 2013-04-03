@@ -1,0 +1,315 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>2.2. Jubatusクラスタ構築・運用法 &mdash; Jubatus_Manual_for_Developer 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Jubatus_Manual_for_Developer 0.1 documentation" href="../index.html" />
+    <link rel="up" title="2. 運用者向けマニュアル" href="02_00_For_System_Provider.html" />
+    <link rel="next" title="3. アプリケーション開発者向けマニュアル" href="03_00_For_Application_Developer.html" />
+    <link rel="prev" title="2.1. Jubatusシステムインストール手順" href="02_01_Install_Jubatus.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="03_00_For_Application_Developer.html" title="3. アプリケーション開発者向けマニュアル"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="02_01_Install_Jubatus.html" title="2.1. Jubatusシステムインストール手順"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Jubatus_Manual_for_Developer 0.1 documentation</a> &raquo;</li>
+          <li><a href="02_00_For_System_Provider.html" accesskey="U">2. 運用者向けマニュアル</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="jubatus">
+<h1>2.2. Jubatusクラスタ構築・運用法<a class="headerlink" href="#jubatus" title="Permalink to this headline">¶</a></h1>
+<p>本項では、Jubatusを複数のサーバで分散させた環境構築を説明します。</p>
+<p>なお、本項を始める前に、スタンドアローン構成での構築を試すことをお勧めします。</p>
+<div class="section" id="id1">
+<h2>2.2.1. 前提<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>JubatusではZooKeeperを用いて複数のサーバプロセス間を協調動作させることで、分散処理を行うことができます。</p>
+<p>ZooKeeperは分散環境で動作するソフトウェアを運用するうえでの困難を低減するためのサービスを提供します。</p>
+<p>Jubatusを分散環境で動作させる際、ZooKeeperが利用できない状況は致命的です。
+ZooKeeperを高い信頼性で動作させるために、以下のことを注意します。
+詳細は <a class="reference external" href="http://oss.infoscience.co.jp/hadoop/zookeeper/docs/current/">ZooKeeperのドキュメント</a> を参照して下さい。</p>
+<ol class="arabic simple">
+<li>奇数台のマシンによるクラスタ構成(アンサンブル)で運用します。</li>
+<li>ZooKeeperのパフォーマンスが低下し、Jubatusの動作が不安定になることを避けるため、ZooKeeper専用のマシンを用意することを推奨します。</li>
+</ol>
+<p>ここでは、1台のマシン内に複数のサーバプロセスを動作させる方法（分散処理）と3台のマシンで1サーバプロセスずつ動作させる方法（クラスタ構成）を説明していきます。</p>
+</div>
+<div class="section" id="id2">
+<h2>2.2.2. 分散処理<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>① ZooKeeperのインストール</p>
+<blockquote>
+<div><p>Apache ZooKeeperの <a class="reference external" href="http://www.apache.org/dyn/closer.cgi/zookeeper/">ダウンロードサイト</a> からZooKeeperを取得します。</p>
+<div class="highlight-python"><pre>$ sudo wget http://ftp.meisei-u.ac.jp/mirror/apache/dist/zookeeper/stable/zookeeper-3.4.5.tar.gz
+$ tar xvf zookeeper-3.4.5.tar.gz</pre>
+</div>
+<p>※ プロキシを経由している場合は以下の1行を /etc/wgetrc に追記してください。</p>
+<div class="highlight-python"><pre>$ sudo vi /etc/wgetrc</pre>
+</div>
+<div class="highlight-python"><pre>http_proxy=http://username:password@proxy.example.com:port/</pre>
+</div>
+</div></blockquote>
+<p>② ZooKeeperの設定ファイル（zoo.cfg）の作成</p>
+<blockquote>
+<div><p>zookeeper-3.4.5/conf 配下にサンプルの設定ファイルがありますので、そちらをコピーして作成してください。</p>
+<div class="highlight-python"><pre>$ sudo cp /path/to/zookeeper/conf/zoo_sample.cfg /path/to/zookeeper/conf/zoo.cfg</pre>
+</div>
+<p>ここでは、zoo.cfgの各設定項目の説明は省きます。</p>
+</div></blockquote>
+<p>③ ZooKeeperの起動</p>
+<blockquote>
+<div><p>ZooKeeperは以下のようにして起動します。</p>
+<div class="highlight-python"><pre>$ sudo /path/to/zookeeper/bin/zkServer.sh start
+JMX enabled by default
+Using config: /path/to/zookeeper/bin/../conf/zoo.cfg
+Starting zookeeper ... STARTED</pre>
+</div>
+<p>以降では、ZooKeeperがlocalhost:2181で動作していると仮定します。この設定はzoo.cfgで変更可能です。</p>
+</div></blockquote>
+<p>④ 設定ファイルをZooKeeperに設定</p>
+<blockquote>
+<div><p>分散環境では、事前に設定ファイルをZooKeeperに登録します。登録にはjubaconfigというツールを使用します。</p>
+<div class="highlight-python"><pre>$ jubaconfig --cmd write --zookeeper=localhost:2181 --file jubatus-example/shogun/shogun.json --name shogun --type classifier</pre>
+</div>
+</div></blockquote>
+<p>⑤ Jubatus Keeperの起動</p>
+<blockquote>
+<div><p>Jubatus KeeperはRPCリクエストをクライアントからサーバに中継(プロキシ)します。
+分散環境では、クライアントからのRPCリクエストを直接サーバに送るのではなく、一度Keeperに送ります。</p>
+<p>Jubatus Keeperは各Jubatusサーバの種類ごとに提供されています。
+shogunに対応するKeeperはjubaclassifier_keeperとなります。</p>
+<div class="highlight-python"><pre>$ jubaclassifier_keeper --zookeeper=localhost:2181 --rpc-port=9198</pre>
+</div>
+<p>これにより、jubaclassifier_keeperは、TCP 9198番ポートでRPCリクエストを待ち受けます。</p>
+</div></blockquote>
+<p>⑥ サーバプロセスの起動</p>
+<blockquote>
+<div><p>Jubatusサーバを分散環境で開始するには、&#8211;nameと&#8211;zookeeperオプションをサーバの起動時に指定します。
+同じ&#8211;nameで起動されたサーバプロセスは同じクラスタに所属し、お互いに協調動作します。</p>
+<p>一つのマシン内で複数のサーバを起動する場合は、各サーバプロセスごとにポート番号を変える必要があることに注意してください。</p>
+<div class="highlight-python"><pre>$ jubaclassifier --rpc-port=9180 --name=shogun --zookeeper=localhost:2181 &amp;
+$ jubaclassifier --rpc-port=9181 --name=shogun --zookeeper=localhost:2181 &amp;
+$ jubaclassifier --rpc-port=9182 --name=shogun --zookeeper=localhost:2181 &amp;</pre>
+</div>
+<p>Jubatusサーバが分散環境で開始する際に、ZooKeeperシステムの中にノードが作成されます。
+ZooKeeperのクライアント（zkCli.sh）を用いて、3つのプロセスがZooKeeperシステムに登録されていることが確認できます。</p>
+<div class="highlight-python"><pre>$ sudo /path/to/zookeeper/bin/zkCli.sh -server localhost:2181
+[zk: localhost:2181(CONNECTED) 0] ls /jubatus/actors/classifier/shogun/nodes
+[XXX.XXX.XXX.XXX_9180, XXX.XXX.XXX.XXX_9181, XXX.XXX.XXX.XXX_9182]</pre>
+</div>
+</div></blockquote>
+<p>⑦ プログラムの実行</p>
+<blockquote>
+<div><p>今回はサーバではなくKeeperに接続するため、ポート番号にはjubaclassifier_keeperで指定したポート番号を指定します。
+また、分散環境では、RPCリクエストをKeeperへ送る際にクラスタ名を指定する必要があります。</p>
+<div class="highlight-python"><pre>$ python shogun.py</pre>
+</div>
+</div></blockquote>
+<p>⑧ ZooKeeperの停止</p>
+<blockquote>
+<div><p>ZooKeeperを停止する場合は以下のようにして停止します。</p>
+<div class="highlight-python"><pre>$ sudo /path/to/zookeeper/bin/zkServer.sh stop</pre>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="id4">
+<h2>2.2.3. クラスタ構成<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>Jubatusは各種プロセスを一括管理するための仕組みを備えています。
+今、それぞれのサーバに対して、以下の表に対応したプロセスを起動させることを考えます。</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="27%" />
+<col width="73%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">IP Address</th>
+<th class="head">Processes</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>192.168.0.1</td>
+<td>Terminal</td>
+</tr>
+<tr class="row-odd"><td>192.168.0.11</td>
+<td><div class="first last line-block">
+<div class="line">jubaclassifier - 1</div>
+<div class="line">jubaclassifier_keeper/client - 1</div>
+<div class="line">ZooKeeper - 1</div>
+</div>
+</td>
+</tr>
+<tr class="row-even"><td>192.168.0.12</td>
+<td><div class="first last line-block">
+<div class="line">jubaclassifier - 2</div>
+<div class="line">jubaclassifier_keeper/client - 2</div>
+<div class="line">ZooKeeper - 2</div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td>192.168.0.13</td>
+<td><div class="first last line-block">
+<div class="line">jubaclassifier - 3</div>
+<div class="line">jubaclassifier_keeper/client - 3</div>
+<div class="line">ZooKeeper - 3</div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+</div></blockquote>
+<p>① ZooKeeperの設定</p>
+<blockquote>
+<div><p>複数台でZooKeeperを起動する場合、それぞれのzoo.cfgに設定を追加します。</p>
+<div class="highlight-python"><pre>$ sudo vi /path/to/zookeeper/conf/zoo.cfg
+
+server.1=192.168.0.11:2888:3888
+server.2=192.168.0.12:2888:3888
+server.3=192.168.0.13:2888:3888</pre>
+</div>
+<p>また、zoo.cfgのdataDir=に指定したフォルダにmyidファイルを作成する必要があります。</p>
+<p>myidファイルの中身は上記の server.n=xxx.xxx.x.xxx:xxxx:xxxx の n に対応する数字を記述します。</p>
+<div class="highlight-python"><pre>$ cd /tmp/zookeeper         （dataDir=に指定しているディレクトリ）
+$ sudo vi myid</pre>
+</div>
+</div></blockquote>
+<p>② ZooKeeperの起動</p>
+<blockquote>
+<div><p>ZooKeeperサーバを起動します(これらの間でアンサンブル構成を行う必要があります)。</p>
+<div class="highlight-python"><pre>[192.168.0.11]$ bin/zkServer.sh start
+[192.168.0.12]$ bin/zkServer.sh start
+[192.168.0.13]$ bin/zkServer.sh start</pre>
+</div>
+</div></blockquote>
+<p>③ Jubatus Keeperの起動</p>
+<blockquote>
+<div><p>jubaclassifier_keeperプロセスを起動します。jubaclassifier_keeperはTCP 9199番ポートをデフォルトで使用します。</p>
+<div class="highlight-python"><pre>[192.168.0.11]$ jubaclassifier_keeper --zookeeper 192.168.0.11:2181,192.168.0.12:2181,192.168.0.13:2181
+[192.168.0.12]$ jubaclassifier_keeper --zookeeper 192.168.0.11:2181,192.168.0.12:2181,192.168.0.13:2181
+[192.168.0.13]$ jubaclassifier_keeper --zookeeper 192.168.0.11:2181,192.168.0.12:2181,192.168.0.13:2181</pre>
+</div>
+</div></blockquote>
+<p>④ Jubavisor:サーバプロセス管理のエージェント</p>
+<blockquote>
+<div><p>jubavisorはサーバプロセスを管理するためのエージェントプロセスです。</p>
+<p>jubavisorを使うことで、Jubatusサーバの各プロセスを、操作用コマンドであるjubactlからのRPCリクエストによって管理することができます。
+jubavisorはTCP 9198番ポートをデフォルトで使用します。</p>
+<div class="highlight-python"><pre>[192.168.0.11]$ jubavisor --zookeeper 192.168.0.11:2181,192.168.0.12:2181,192.168.0.13:2181 --daemon
+[192.168.0.12]$ jubavisor --zookeeper 192.168.0.11:2181,192.168.0.12:2181,192.168.0.13:2181 --daemon
+[192.168.0.13]$ jubavisor --zookeeper 192.168.0.11:2181,192.168.0.12:2181,192.168.0.13:2181 --daemon</pre>
+</div>
+<p>jubactlからjubavisorに命令を送信してみましょう。</p>
+<div class="highlight-python"><pre>[192.168.0.1]$ jubactl -c start  --server=jubaclassifier --type=classifier --name=shogun --zookeeper 192.168.0.11:2181,192.168.0.12:2181,192.168.0.13:2181
+ sending start / jubaclassifier/shogun to 192.168.0.11_9198...ok.
+ sending start / jubaclassifier/shogun to 192.168.0.12_9198...ok.
+ sending start / jubaclassifier/shogun to 192.168.0.13_9198...ok.
+[192.168.0.1]$ jubactl -c status --server=jubaclassifier --type=classifier --name=shogun --zookeeper 192.168.0.11:2181,192.168.0.12:2181,192.168.0.13:2181
+active jubaclassifier_keeper members:
+ 192.168.0.11_9199
+ 192.168.0.12_9199
+ 192.168.0.13_9199
+active jubavisor members:
+ 192.168.0.11_9198
+ 192.168.0.12_9198
+ 192.168.0.13_9198
+active shogun members:
+ 192.168.0.11_9200
+ 192.168.0.12_9200
+ 192.168.0.13_9200</pre>
+</div>
+<p>membersの表示から、サーバが起動していることが分かります。
+複数のホストでクライアントを同時に動かしてみましょう。</p>
+<div class="highlight-python"><pre>$ python shogun.py</pre>
+</div>
+<p>なお、Jubatusサーバの停止もjubactlから行うことができます。</p>
+<div class="highlight-python"><pre>[192.168.0.1]$ jubactl -c stop --server=jubaclassifier --type=classifier --name=shogun --zookeeper 192.168.0.11:2181,192.168.0.12:2181,192.168.0.13:2181</pre>
+</div>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">2.2. Jubatusクラスタ構築・運用法</a><ul>
+<li><a class="reference internal" href="#id1">2.2.1. 前提</a></li>
+<li><a class="reference internal" href="#id2">2.2.2. 分散処理</a></li>
+<li><a class="reference internal" href="#id4">2.2.3. クラスタ構成</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="02_01_Install_Jubatus.html"
+                        title="previous chapter">2.1. Jubatusシステムインストール手順</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="03_00_For_Application_Developer.html"
+                        title="next chapter">3. アプリケーション開発者向けマニュアル</a></p>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="03_00_For_Application_Developer.html" title="3. アプリケーション開発者向けマニュアル"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="02_01_Install_Jubatus.html" title="2.1. Jubatusシステムインストール手順"
+             >previous</a> |</li>
+        <li><a href="../index.html">Jubatus_Manual_for_Developer 0.1 documentation</a> &raquo;</li>
+          <li><a href="02_00_For_System_Provider.html" >2. 運用者向けマニュアル</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, NTT Advanced Technology.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
