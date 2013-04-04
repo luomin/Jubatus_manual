@@ -5,3 +5,4 @@ Recommendation
 Jubatus Serverへの接続を行います（33行目）。　――＞77行目
 取得した1行を’,’で分割し要素ごとに分けます（76行目）。 -->97
 
+test
