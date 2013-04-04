@@ -4,5 +4,5 @@ This is html based manual document for Jubatus Operators and Developers. Please 
 
 Contributors:
 ============== 
-Software Innovation Center 
-Nippon Telegraph and Telephone Corporation
+Software Innovation Center.
+NTT
